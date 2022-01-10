@@ -26,7 +26,7 @@ hist
   #It is not normal
 
 ##If not normal, is the distribution skewed? If so, in which direction?
-  #The distribution has a negative skew to the right.
+  #The distribution has a negative skew as the tail is longer to the left.
 
 ##Include a normal curve to the Histogram that you plotted
 hist2 <- hist + stat_function(fun = dnorm, args = list(mean = mean(acs_df$HSDegree, na.rm = TRUE), sd = sd(acs_df$HSDegree, na.rm=TRUE)), color='black', size=1)
