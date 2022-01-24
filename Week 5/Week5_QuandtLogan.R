@@ -46,6 +46,3 @@ housing_add_two <- strsplit(housing_add_one," ")
 housing_add_two
 housing_add_concatenate <- paste0(housing_df$addr_full %>% pluck(7,1), collapse = " ")
 housing_add_concatenate
-  
-
-
