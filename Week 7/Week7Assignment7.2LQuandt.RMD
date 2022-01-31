@@ -1,0 +1,74 @@
+---
+title: "Assignment 7"
+Author: "Logan Quandt"
+date: "2022-01-29"
+output: 
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## i.) Survey loaded and Covariance calculated
+```{r}
+library(ggplot2)
+library(purrr)
+library(dplyr)
+library(pastecs)
+library(stringr)
+library(ppcor)
+library(ggm)
+
+setwd('/Users/logan/Documents/GitHub/dsc520clone')
+survey <- read.csv("data/student-survey.csv")
+print(colnames(survey))
+cov(survey$TimeTV,survey$TimeReading,use='everything')
+```
+#### The covariance between TV time and Reading time is negative implying that they move in inverse directions. This indicates an increase in TV time would decrease reading time and vice versa.
+
+## ii.) Measurements of Variables
+```{r}
+head(survey)
+```
+#### The variables are numeric with Happiness,TimeReading (Hours) and TimeTV (Minutes) being interval variables. Gender is a binary variable (1 or 0). As the variables are not standarized the magnatitude of the covariance will depend on the magnitude of the variable. If we changed the measurements of one or both variables such as converting TimeTV into hours, the covariance would be changed though this change may help overall.
+
+## iii.) Correlation test
+```{r}
+cor(survey$TimeReading,survey$TimeTV,use="everything",method="Pearson")
+```
+#### I used Pearson Correlation due to it being the best to use when there are two quantitative variables. The results indicate a strong negative correlation between the two variables.
+
+## iiii.) Correlation test and confidence interval
+```{r}
+cor(survey)
+cor(survey$TimeTV,survey$TimeReading)
+cor.test(survey$TimeReading + survey$TimeTV,method="pearson",conf.level = 0.99)
+```
+#### When looking at the correlation between TimeReading and Happiness, the p value = 0.0003153, the t statistic = -5.6457 and the degrees of freedom = 9. The 99% confidence interval is between -0.9801052 and -0.4453124. As the p statistic is less than 0.01 and the confidence interval does not pass 0, we can likely assume that the actual value of the correlation is negative.
+
+## v.) Correlation and Coefficent of Determination
+```{r}
+cor(survey$TimeTV,survey$TimeReading)
+cor(survey$TimeTV,survey$TimeReading)^2
+```
+####The coefficient of determination is 0.7798085. This means that TV Time shares 77% of the variablity of Time Reading or that TV time accounts for 77% of the variation in Time Reading.
+
+## vi.) Answer on TV Time vs Reading Time
+#### Yes, it appears that TV time and Reading time are negatively correlated which indicates that more TV time would cause a student to read less. The coefficient of determination also helps confirm this by showing that 77% of the variation in reading time is related to the amount of TV time.
+
+
+## vii.) Partial Correlation of 3 variables
+```{r}
+cor(survey$TimeReading,survey$Happiness)
+cor(survey$TimeReading,survey$Happiness)^2
+pc <- pcor(c("TimeReading","Happiness","TimeTV"), var(survey))
+pc^2
+pcor.test(pc,1,11)
+```
+#### Partial correlation between Happiness and Time reading controlling for the effect of TV Time indicates that there is not a statisically significant difference confirmed by the p value of 0.31.
+
+
+
