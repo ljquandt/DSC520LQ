@@ -1,0 +1,198 @@
+---
+title: "Final Project Step 3"
+author: "Logan Quandt"
+date: "3/2/2022"
+output: 
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+## Introduction and Problem Statement
+> Many people still extol the American dream that used to be a single income supporting a suburban home with a picket fence, two cars in the driveway and a family. However, for many there appears to be inequality in the US in who shares in this dream. There is income and wealth inequality by gender, race and even age which may seem to be caused by inequity. Personally, I am very interested in financial ideas due to my work experience and my experience in trying to be as financially successful as my older family members. In this project I hope to explore some of this income inequality to see if I can identify relationships between variables that may also help to explain some of the differences.
+
+## How I will Approach This
+
+> My hypothesis is that there are multiple variables that go into the differences in pay between genders, races, and age groups. In my approach I will be looking at the correlation and strength of correlation between variables to explore the relationships between them along with performing numerous other statistical tests. I will also explore the data visually using plots and graphs.
+
+## Libraries
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(readxl)
+library(purrr)
+```
+
+## Loading Datasets
+
+```{r}
+
+setwd("/Users/logan/Documents/GitHub/DSC520LQ/Final Project")
+
+#Dataset one
+census_df <- read.csv("data/census.csv")
+head(census_df)
+census_df_final <- select(census_df, age, sex, race, education, occupation, over50k)
+
+#Dataset two
+pinc_df_whites <- read.csv('data/pinc_white_test_csv.csv')
+
+pinc_df_afr_amer <- read.csv('data/pinc_african_amer_test_csv.csv')
+
+#Dataset three
+glassdoor_pay_df <- read.csv('data/Glassdoor Gender Pay Gap.csv')
+head(glassdoor_pay_df)
+glassdoor_pay_df_final <- select(glassdoor_pay_df, JobTitle, Gender, Age, Education,Seniority, BasePay, Bonus)
+
+#Dataset four
+college_df_wages <- read.csv('data/wages.csv')
+college_df_unemployment <- read.csv('data/Unemployment_rate.csv')
+college_df_underemployment <- read.csv('data/under_employment_college_grads.csv')
+college_df_labor_market <- read.csv('data/labor_market_college_grads.csv')
+```
+
+## College Datasets Analysis
+
+```{r}
+#format years
+college_df_underemployment$year <-format(as.Date(college_df_underemployment$Date, format="%d/%m/%Y"),"%Y")
+
+#graphs for undermployment
+underplot1 <- ggplot(college_df_underemployment, aes(x=Recent.graduates, y=year)) + geom_point() + ggtitle("Recent College Grads Underemployment")
+underplot2 <- ggplot(college_df_underemployment, aes(x=College.graduates, y=year)) + geom_point() + ggtitle("All College Grads Underemployment")
+
+underplot1
+underplot2
+
+#graphs for unemployment
+college_df_unemployment$year <- format(as.Date(college_df_unemployment$Date, format="%d/%m/%Y"),"%Y")
+
+unplot1 <- ggplot(college_df_unemployment, aes(x=Young.workers, y=year)) + geom_point() + ggtitle("Young Workers Unemployment")
+unplot2 <- ggplot(college_df_unemployment, aes(x=All.workers, y=year)) + geom_point() + ggtitle('All Workers Unemployment')
+unplot3 <- ggplot(college_df_unemployment, aes(x=Recent.graduates, y=year)) + geom_point() + ggtitle("Recent College Grads unemployment")
+unplot4 <- ggplot(college_df_unemployment, aes(x=College.graduates, y=year)) + geom_point() + ggtitle("All College Grads Unenployment")
+
+unplot1
+unplot2
+unplot3
+unplot4
+
+#change df names and select to show differences by major
+names(college_df_labor_market)[names(college_df_labor_market) == 'Median.Wage.Mid.Career'] <- 'median_mid_career'
+names(college_df_labor_market)[names(college_df_labor_market) == 'Major'] <- 'college_major'
+
+college_df_labor_market_final <- select(college_df_labor_market, median_mid_career, college_major)
+
+head(college_df_labor_market_final)
+
+#labor market graphs
+ggplot(college_df_labor_market_final, aes(x=college_major, y=median_mid_career)) + geom_col() + ggtitle('Major vs Median Career Income')
+
+#correlation between share with Grad degree and median career income
+cor(college_df_labor_market_final$median_mid_career, college_df_labor_market$Share.with.Graduate.Degree)
+
+#Regression to check significance of correlation
+graduate_lm <- lm(median_mid_career ~ Share.with.Graduate.Degree, college_df_labor_market)
+summary(graduate_lm)
+```
+
+
+## Gender Analysis
+```{r}
+#graph showing Gender vs Basepay
+ggplot(glassdoor_pay_df_final, aes(x=Gender, y= BasePay)) + geom_point()
+
+#filter dataset by Gender
+glassdoor_pay_df_final_m <- glassdoor_pay_df_final %>% filter(Gender == 'Male')
+glassdoor_pay_df_final_f <- glassdoor_pay_df_final %>% filter(Gender == 'Female')
+
+#graphs
+glass_m_edplot <- ggplot(glassdoor_pay_df_final_m, aes(x=Education)) + geom_bar() + ggtitle('Male Education')
+glass_f_edplot <- ggplot(glassdoor_pay_df_final_f, aes(x=Education)) + geom_bar() + ggtitle('Female Education')
+glass_m_Senplot <- ggplot(glassdoor_pay_df_final_m, aes(x=Seniority)) + geom_bar() + ggtitle('Male Experience')
+glass_f_Senplot <- ggplot(glassdoor_pay_df_final_f, aes(x=Seniority)) + geom_bar() + ggtitle("Female Experience")
+
+glass_m_edplot
+glass_f_edplot
+glass_m_Senplot
+glass_f_Senplot
+
+#correlation between Age, Seniority and basepay
+cor(glassdoor_pay_df$BasePay, glassdoor_pay_df$Age)
+cor(glassdoor_pay_df$BasePay, glassdoor_pay_df$Seniority)
+
+#calculate percentage of managerial jobs
+table(glassdoor_pay_df_final_m$JobTitle)
+table(glassdoor_pay_df_final_f$JobTitle)
+72/nrow(glassdoor_pay_df_final_m)
+18/nrow(glassdoor_pay_df_final_f)
+```
+
+##Racial Analysis
+```{r}
+ggplot(census_df_final, aes(x=race)) + geom_bar()
+
+#separate df by race
+census_df_final <- data.frame(lapply(census_df_final, trimws), stringsAsFactors = FALSE)
+census_df_final_w <- census_df_final %>% filter(sex == 'Male')
+census_df_final_b <- census_df_final %>% filter(race == 'Black')
+census_df_final_o <- census_df_final %>% filter(race == c('Asian-Pac-Islander','Amer-Indian-Eskimo'))
+
+#percentage of population with income over 50k
+table(census_df_final_w$over50k)
+6533/nrow(census_df_final_w)
+table(census_df_final_b$over50k)
+374/nrow(census_df_final_b)
+
+#education including incomplete college
+table(census_df_final_w$education)
+
+(3625+308+1150+4416+874+640)/nrow(census_df_final_w)
+
+table(census_df_final_b$education)
+(308+8+81+728+103+111)/nrow(census_df_final_b)
+
+#education with college grads
+(3625+308+1150+874+640)/nrow(census_df_final_w)
+
+(308+8+81+111+103)/nrow(census_df_final_b)
+
+#graphs
+census_50k_wplot <- ggplot(census_df_final_w, aes(x=over50k)) + geom_bar() + ggtitle('Income over 50k - White')
+census_Ed_wplot <- ggplot(census_df_final_w, aes(x=education)) + geom_bar() + ggtitle('Education Level - White')
+census_50k_bplot <- ggplot(census_df_final_b, aes(x=over50k)) + geom_bar() + ggtitle('Income over 50k - Black')
+census_Ed_bplot <- ggplot(census_df_final_b, aes(x=education)) + geom_bar() + ggtitle("Education Level - Black")
+
+census_50k_wplot
+census_50k_bplot
+census_Ed_wplot
+census_Ed_bplot
+
+ggplot(census_df_final_w, aes(x=occupation)) + geom_bar() + ggtitle("Occupation - White")
+ggplot(census_df_final_b, aes(x=occupation)) + geom_bar() + ggtitle('Occupation - Black')
+
+#economic inequality ratio
+pinc_df_whites$GINI.Ratio[1]
+pinc_df_afr_amer$GINI.Ratio[1]
+```
+
+#Analysis Review
+> My analysis broke down differences in economic equality between Ages, Education Level, Seniority, Gender and Race. 
+
+> In my analysis on the college datasets it showed that younger workers and recent college graduates have much higher underemployment and unemployment rates compared to the total workforce and college graduates of all ages. The unemployment rate for recent college graduates peaked at around 13% in 2020 due to COVID while older graduates had an unemployment rate below 8%. Younger workers in general peaked at over 20% and the total workforce peaked at 12.5 again highlighting the difficulties young Americans have in entering the workforce. My analysis on the college data sets also showed there is a strong difference in median career income dependent on the college major chosen. A share of workers of a graduate degree had a very weak correlation to median career income but was not statistically significant based on this dataset.
+
+> Looking at the Glass door Data set, it confirmed the common knowledge that men make more than women looking at the Scatter plot comparing their base pay. The Scatter plot on Education shows that men have a higher share of Master's and PHD degrees compared to women. Looking at Seniority it appears Women have a disproportionately small share of workers with 4 years of experience. I also looked at the correlation between age and seniority with base pay. There is a positive correlation (0.56 and 0.51) but it is not a strong positive correlation. Men also had a higher share of managers compared with women at 13.5% compared to 3.8% for women.
+
+> Looking at racial income differences I founded on the differences between Caucasians and African Americans as it is a common example used in racial discrepancies. This data showed that 30% of Whites make over 50k while only 12% of African Americans do. There is also a discrepancy in the education levels between races. White Americans have 51.5% who at least have attended some college compared to 30.5% of African Americans. Looking at those who completed college the difference drops somewhat to 30.8% for Caucasians compared to 20.1% for African Americans. The GINI ratio between the two also reflects some of the income differences with whites having a score of 0.52 (1.0 being perfect equality) compared to 0.50 for African Americans.
+
+## Implications
+
+> The implications of this analysis show that beyond gender and racial differences there are other factors that are impacting economic equality in America. Knowing some of these factors that also impact economic inequality and their levels of difference will help lawmakers and employers by setting up programs to help mitigate the differences. Some examples of this may be setting up scholarships specifically for minorities to help them achieve higher education or if the lack of women with four years of seniority is caused by pregnancies related absences perhaps setting up programs to help them navigate a career and motherhood at the same time.
+
+## Limitations
+
+> Limitations I encountered included the fact that the Pinc data sets had 50 columns which was difficult to work with so I ended up using it as a supplemental piece. I also struggled to calculate the correlation for some variables as they were categorical which could have been solved by replacing the string data with numerical values that represent them. I was able to convert them originally but could not find a way for them to be used accurately so I left them as categorical. These data sources may also be limited in whether they accurately reflect the total US population. 
+
+## Concluding Remarks
+> In conclusion, there are multiple variables that have an effect on income. Age and Education both have a positive correlation to income levels. Experience or Seniority in your job also plays a role in income levels. Gender and Racial differences may be attributed partially to some of these differences. 
